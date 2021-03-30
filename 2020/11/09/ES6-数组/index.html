@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="baidu-site-verification" content="code-jjCJrHUiwT" />
+  <title>
+    ES6 数组 |  沙
+  </title>
+  <meta name="generator" content="hexo-theme-ayer">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-ES6-数组"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  ES6 数组
+</h1>
+ 
+
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2020/11/09/ES6-%E6%95%B0%E7%BB%84/" class="article-date">
+  <time datetime="2020-11-09T08:52:04.000Z" itemprop="datePublished">2020-11-09</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaScript/">JavaScript</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.3k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">6 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="ES6数组去重"><a href="#ES6数组去重" class="headerlink" title="ES6数组去重"></a>ES6数组去重</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [要去重的数组];</span><br><span class="line"><span class="keyword">let</span> obj = &#123;&#125;;</span><br><span class="line">arr = arr.reduce(<span class="function"><span class="keyword">function</span> (<span class="params">item, next</span>)</span>&#123;</span><br><span class="line">    obj[next.要去重的值] ? <span class="string">&quot;&quot;</span> : (obj[next.要去重的值] = <span class="literal">true</span> &amp;&amp; item.push(next));</span><br><span class="line">    <span class="keyword">return</span> item;</span><br><span class="line">&#125;, []);</span><br><span class="line"><span class="comment">// 打印去重后的数组</span></span><br><span class="line"><span class="built_in">console</span>.log(arr);</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="ES6-数组方法"><a href="#ES6-数组方法" class="headerlink" title="ES6 数组方法"></a>ES6 数组方法</h2><h3 id="arr-push"><a href="#arr-push" class="headerlink" title="arr.push()"></a>arr.push()</h3><p><strong>从后面添加元素，返回值为添加完后的数组的长度。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.push(<span class="number">5</span>))	<span class="comment">// 6</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [1, 2, 3, 4, 5, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-pop"><a href="#arr-pop" class="headerlink" title="arr.pop()"></a>arr.pop()</h3><p><strong>从后面删除元素，只能是一个，返回值是删除的元素。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.pop())	<span class="comment">// 5</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [1, 2, 3, 4]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-shift"><a href="#arr-shift" class="headerlink" title="arr.shift()"></a>arr.shift()</h3><p><strong>从前面删除元素，只能删除一个，返回值是删除的元素。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.shift())	<span class="comment">// 1</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-unshift"><a href="#arr-unshift" class="headerlink" title="arr.unshift()"></a>arr.unshift()</h3><p><strong>从前面添加元素，返回值是添加完后的数组的长度。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.unshift(<span class="number">2</span>))	<span class="comment">// 6</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [2, 1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-splice-i-n"><a href="#arr-splice-i-n" class="headerlink" title="arr.splice(i, n)"></a>arr.splice(i, n)</h3><p><strong>删除从 i (索引值)开始之后的那个元素，返回值是删除的元素。</strong></p>
+<table>
+<thead>
+<tr>
+<th>i</th>
+<th>n</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>索引值</td>
+<td>个数</td>
+</tr>
+</tbody></table>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.splice(<span class="number">2</span>, <span class="number">2</span>))	<span class="comment">// [3, 4]</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [1, 2, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-concat"><a href="#arr-concat" class="headerlink" title="arr.concat()"></a>arr.concat()</h3><p><strong>连接两个数组，返回值为连接后的新数组。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.concat([<span class="number">1</span>, <span class="number">2</span>]))	<span class="comment">// [1, 2, 3, 4, 5, 1, 2]</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="str-split"><a href="#str-split" class="headerlink" title="str.split()"></a>str.split()</h3><p><strong>将字符串转化为数组。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> str = <span class="string">&quot;123456&quot;</span></span><br><span class="line"><span class="built_in">console</span>.log(str.split(<span class="string">&quot;&quot;</span>))	<span class="comment">// [&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-sort"><a href="#arr-sort" class="headerlink" title="arr.sort()"></a>arr.sort()</h3><p><strong>将数组进行排序，返回值是排好的数组，默认是按照最左边的数字进行排序，不是按照数字大小排序的。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">2</span>, <span class="number">10</span>, <span class="number">6</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">22</span>, <span class="number">3</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.sort())	<span class="comment">// [1, 10, 2, 22, 3, 4, 6]</span></span><br><span class="line"><span class="keyword">let</span> arr1 = arr.sort(<span class="function">(<span class="params">a,b</span>) =&gt;</span> a - b)</span><br><span class="line"><span class="built_in">console</span>.log(arr1)	<span class="comment">// [1, 2, 3, 4, 6, 10, 22]</span></span><br><span class="line"><span class="keyword">let</span> arr2 = arr.sort(<span class="function">(<span class="params">a,b</span>) =&gt;</span> b - a)</span><br><span class="line"><span class="built_in">console</span>.log(arr2)	<span class="comment">// [22, 10, 6, 4, 3, 2, 1]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-reverse"><a href="#arr-reverse" class="headerlink" title="arr.reverse()"></a>arr.reverse()</h3><p><strong>将数组反转，返回值是反转后的数组。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.reverse())	<span class="comment">// [5, 4, 3, 2, 1]</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [5, 4, 3, 2, 1]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-slice-start-end"><a href="#arr-slice-start-end" class="headerlink" title="arr.slice(start,end)"></a>arr.slice(start,end)</h3><p><strong>切去索引值 start 到索引值 end 的数组，不包含 end 索引的值，返回值是切出来的数组。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="built_in">console</span>.log(arr.slice(<span class="number">1</span>,<span class="number">3</span>))	<span class="comment">// [2, 3]</span></span><br><span class="line"><span class="built_in">console</span>.log(arr)	<span class="comment">// [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-forEach-callback"><a href="#arr-forEach-callback" class="headerlink" title="arr.forEach(callback)"></a>arr.forEach(callback)</h3><p><strong>遍历数组，无 return。</strong></p>
+<table>
+<thead>
+<tr>
+<th>value</th>
+<th>index</th>
+<th>array</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前索引的值</td>
+<td>索引</td>
+<td>原数组</td>
+</tr>
+</tbody></table>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line">arr.forEach(<span class="function">(<span class="params">value, index, array</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;value:$&#123;value&#125; index:$&#123;index&#125; array:$&#123;array&#125;&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// value: 1  index: 0  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 2  index: 1  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 3  index: 2  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 4  index: 3  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 5  index: 4  array: 1, 2, 3, 4, 5</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line">arr.forEach(<span class="function">(<span class="params">value, index, array</span>) =&gt;</span> &#123;</span><br><span class="line">    value = value * <span class="number">2</span></span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;value:$&#123;value&#125; index:$&#123;index&#125; array:$&#123;array&#125;&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="built_in">console</span>.log(arr)</span><br><span class="line"><span class="comment">// value: 2  index: 0  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 4  index: 1  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 6  index: 2  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 8  index: 3  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// value: 10  index: 4  array: 1, 2, 3, 4, 5</span></span><br><span class="line"><span class="comment">// [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-map-callback"><a href="#arr-map-callback" class="headerlink" title="arr.map(callback)"></a>arr.map(callback)</h3><p><strong>映射数组(遍历数组)，有 return 返回一个新数组。</strong></p>
+<table>
+<thead>
+<tr>
+<th>value</th>
+<th>index</th>
+<th>array</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>当前索引的值</td>
+<td>索引</td>
+<td>原数组</td>
+</tr>
+</tbody></table>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line">arr.map(<span class="function">(<span class="params">value, index, array</span>) =&gt;</span> &#123;</span><br><span class="line">    value = value * <span class="number">2</span></span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;value:$&#123;value&#125; index:$&#123;index&#125; array:$&#123;array&#125;&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="built_in">console</span>.log(arr)</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p><strong><em>arr.forEach() 和 arr.map() 的区别</em></strong></p>
+<ul>
+<li>arr.forEach() 是和 for 循环一样，是代替 for。arr.map() 是修改数组其中的数据，并返回新的数据。</li>
+<li>arr.forEach() 没有 return。arr.map() 有 return。</li>
+</ul>
+</blockquote>
+<h3 id="arr-filter-callback"><a href="#arr-filter-callback" class="headerlink" title="arr.filter(callback)"></a>arr.filter(callback)</h3><p><strong>过滤数组，返回一个满足要求的数组。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="keyword">let</span> arr1 = arr.filter(<span class="function">(<span class="params">i, v</span>) =&gt;</span> i &lt; <span class="number">3</span>)</span><br><span class="line"><span class="built_in">console</span>.log(arr1)	<span class="comment">// [1, 2]</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-every-callback"><a href="#arr-every-callback" class="headerlink" title="arr.every(callback)"></a>arr.every(callback)</h3><p><strong>依据判断条件，数组的元素是否全满足，若满足则返回true。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br><span class="line"><span class="keyword">let</span> arr1 = arr.every(<span class="function">(<span class="params">i, v</span>) =&gt;</span> i &lt; <span class="number">3</span>)</span><br><span class="line"><span class="built_in">console</span>.log(arr1)	<span class="comment">// false</span></span><br><span class="line"><span class="keyword">let</span> arr2 = arr.every(<span class="function">(<span class="params">i, v</span>) =&gt;</span> i &lt; <span class="number">10</span>)</span><br><span class="line"><span class="built_in">console</span>.log(arr2)	<span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-some"><a href="#arr-some" class="headerlink" title="arr.some()"></a>arr.some()</h3><p><strong>依据判断条件，数组的元素是否有一个满足，若有一个满足则返回 true。</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>]</span><br><span class="line"><span class="keyword">let</span> arr1 = arr.some(<span class="function">(<span class="params">i, v</span>) =&gt;</span> i &lt; <span class="number">3</span>)</span><br><span class="line"><span class="built_in">console</span>.log(arr1)	<span class="comment">// true</span></span><br><span class="line"><span class="keyword">let</span> arr2 = arr.some(<span class="function">(<span class="params">i, v</span>) =&gt;</span> i &gt; <span class="number">10</span>)</span><br><span class="line"><span class="built_in">console</span>.log(arr2)	<span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="arr-reduce-callback-initialValue"><a href="#arr-reduce-callback-initialValue" class="headerlink" title="arr.reduce(callback,initialValue)"></a>arr.reduce(callback,initialValue)</h3><p><strong>迭代数组的所有项，累加器，数组中的每个值(从左到右)合并，最终计算为一个值。</strong></p>
+<ul>
+<li>callback<ul>
+<li>previousValue：必选，上一次调用回调返回的值，或者是提供的初始值(initialValue)</li>
+<li>currentValue：必选，数组中当前被处理的数组项</li>
+<li>index：可选，当前数组项在数组中的索引值</li>
+<li>array：可选，原数组</li>
+</ul>
+</li>
+<li>initialValue：可选，初始值</li>
+</ul>
+<blockquote>
+<p><strong><em>实行方法</em></strong></p>
+<p>回调函数第一次执行时，previousValue 和 currentValue 可以是一个值，如果 initivalValue 在调用 reduce() 时被提供，那么第一个 previousValue 等于 initivalValue，并且 currentValue 等于数组中的第一个值；如果 initivalValue 未被提供，那么 previousValue 等于数组中的第一个值。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]</span><br><span class="line"><span class="keyword">let</span> arr1 = arr.reduce(<span class="function">(<span class="params">previousValue, currentValue</span>) =&gt;</span> &#123;</span><br><span class="line">    previousValue + currentValue</span><br><span class="line">&#125;)</span><br><span class="line"><span class="built_in">console</span>.log(arr1)	<span class="comment">// 10</span></span><br></pre></td></tr></table></figure>
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.julyzzz.icu/2020/11/09/ES6-%E6%95%B0%E7%BB%84/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ES6/" rel="tag">ES6</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2020/11/13/Github%E4%B8%8B%E8%BD%BD%E6%BA%90/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Github下载源
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/11/08/SpringBoot-ElasticSearch/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">SpringBoot+ElasticSearch</div>
+      </a>
+    
+  </nav>
+
+  
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2020-2021
+        <i class="ri-heart-fill heart_icon"></i> ian
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        由 <a href="https://hexo.io" target="_blank">Hexo</a> 强力驱动
+        <span class="division">|</span>
+        主题 - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+<!-- ClickLove -->
+
+
+<script src="/js/clickLove.js"></script>
+
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+
+
+<link rel="stylesheet" href="/css/clipboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+<!-- CanvasBackground -->
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=22707008&auto=1&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>

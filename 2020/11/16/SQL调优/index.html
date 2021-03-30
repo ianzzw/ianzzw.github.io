@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="baidu-site-verification" content="code-jjCJrHUiwT" />
+  <title>
+    SQL调优 |  沙
+  </title>
+  <meta name="generator" content="hexo-theme-ayer">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-SQL调优"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  SQL调优
+</h1>
+ 
+
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2020/11/16/SQL%E8%B0%83%E4%BC%98/" class="article-date">
+  <time datetime="2020-11-16T01:43:42.000Z" itemprop="datePublished">2020-11-16</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/SQL/">SQL</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">4.7k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">19 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h1 id="SQL-规范性检查"><a href="#SQL-规范性检查" class="headerlink" title="SQL 规范性检查"></a>SQL 规范性检查</h1><h2 id="SELECT-检查"><a href="#SELECT-检查" class="headerlink" title="SELECT 检查"></a>SELECT 检查</h2><h3 id="UDF-用户自定义函数"><a href="#UDF-用户自定义函数" class="headerlink" title="UDF 用户自定义函数"></a>UDF 用户自定义函数</h3><p>SQL 语句的 SELECT 后面使用了自定义函数 UDF，SQL 返回多少行，那么 UDF 函数就会被调用多少次，非常影响性能。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># getOrderNo 是用户自定义的一个函数，用户根据 order_sn 来获取订单编号</span><br><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	payment_id,</span><br><span class="line">	order_sn,</span><br><span class="line">	getOrderNo ( order_sn ) </span><br><span class="line">FROM</span><br><span class="line">	payment_transaction </span><br><span class="line">WHERE</span><br><span class="line">	status &#x3D; 1 </span><br><span class="line">	AND creat_time BETWEEN &#39;2020-10-01 10:00:00&#39; </span><br><span class="line">	AND &#39;2020-10-02 10:00:00&#39;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="TEXT-类型检查"><a href="#TEXT-类型检查" class="headerlink" title="TEXT 类型检查"></a>TEXT 类型检查</h3><p>如果 SELECT 出现 TEXT 类型的字段，就会消耗大量的网络和 IO 带宽，由于返回的内容过大超过 max_allowed_packet 设置会导致程序报错，需要谨慎使用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># 表 request_log 中 content 是 text 类型</span><br><span class="line">SELECT</span><br><span class="line">	user_id,</span><br><span class="line">	content,</span><br><span class="line">	status,</span><br><span class="line">	url,</span><br><span class="line">	type </span><br><span class="line">FROM</span><br><span class="line">	request_log </span><br><span class="line">WHERE</span><br><span class="line">	user_id &#x3D; 11111;</span><br></pre></td></tr></table></figure>
+
+<h3 id="group-concat-谨慎使用"><a href="#group-concat-谨慎使用" class="headerlink" title="group_concat 谨慎使用"></a>group_concat 谨慎使用</h3><p>group_concat 是一个字符串聚合函数，会影响 SQL 的响应时间，如果返回的值过大超过了 max_allowed_packet 设置会导致程序报错。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	batch_id,</span><br><span class="line">	group_concat( name ) </span><br><span class="line">FROM</span><br><span class="line">	buffer_batch </span><br><span class="line">WHERE</span><br><span class="line">	status &#x3D; 0 </span><br><span class="line">	AND create_time BETWEEN &#39;2020-10-01 10:00:00&#39; </span><br><span class="line">	AND &#39;2020-10-02 10:00:00&#39;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="内联子查询"><a href="#内联子查询" class="headerlink" title="内联子查询"></a>内联子查询</h3><p>在 SELECT 后面有子查询的情况称为内联子查询，SQL 返回多少行，子查询就需要执行过多少次，严重影响 SQL 性能。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">SELECT id,( SELECT rule_name FROM member_rule LIMIT 1 ) AS rule_name,</span><br><span class="line">member_id,</span><br><span class="line">member_type,</span><br><span class="line">member_name,</span><br><span class="line">status </span><br><span class="line">FROM</span><br><span class="line">	member_info m </span><br><span class="line">WHERE</span><br><span class="line">	STATUS &#x3D; 1 </span><br><span class="line">	AND create_time BETWEEN &#39;2020-09-02 10:00:00&#39; </span><br><span class="line">	AND &#39;2020-10-01 10:00:00&#39;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="FROM-检查"><a href="#FROM-检查" class="headerlink" title="FROM 检查"></a>FROM 检查</h2><h3 id="表的连接方式"><a href="#表的连接方式" class="headerlink" title="表的连接方式"></a>表的连接方式</h3><p>在 MySQL 中不建议使用 LEFT JOIN，即使 ON 过滤条件列索引，一些情况也不会走索引，导致大量的数据行被扫描，SQL 性能变得很差，同时要清楚 ON 和 WHERE 的区别。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	a.member_id,</span><br><span class="line">	a.create_time,</span><br><span class="line">	b.active_time </span><br><span class="line">FROM</span><br><span class="line">	operation_log a</span><br><span class="line">	LEFT JOIN member_info b ON a.member_id &#x3D; b.member_id </span><br><span class="line">WHERE</span><br><span class="line">	b.status &#x3D; 1 </span><br><span class="line">	AND a.create_time BETWEEN &#39;2020-10-01 00:00:00&#39; </span><br><span class="line">	AND &#39;2020-10-30 00:00:00&#39; </span><br><span class="line">	LIMIT 100,</span><br><span class="line">	0;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>ON 和 WHERE 的区别</strong></p>
+<ul>
+<li>先执行 ON，后执行 WHERE；ON 是建立关联关系，WHERE 是对关联关系的筛选。</li>
+<li>对于 LEFT JOIN，不管 ON 后面跟什么条件，左表的数据全部查出来，因此要想过滤需要把条件放到 WHERE 后面。</li>
+<li>对于 INNER JOIN，满足 ON 后面的条件表的数据才能查出，可以起到过滤作用。也可以把条件放到 WHERE 后面。</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>为什么 MySQL 不推荐使用子查询和 JOIN</strong></p>
+<h3 id="1-应用层关联的优势"><a href="#1-应用层关联的优势" class="headerlink" title="1. 应用层关联的优势"></a>1. 应用层关联的优势</h3><ul>
+<li><strong>让缓存的效率更高。</strong><ul>
+<li>许多应用程序可以方便的缓存单表查询对应的结果对象。如果关联中的某个表发生了变化，那么就无法使用查询缓存，而拆分后，如果某个表很少改变，那么基于该表的查询就可以重复利用查询缓存结果。</li>
+</ul>
+</li>
+<li><strong>将查询分解后，执行单个查询可以减少锁的竞争。</strong></li>
+<li><strong>在应用层做关联，可以更容易对数据库进行拆分，更容易做到高性能和可扩展。</strong></li>
+<li><strong>查询本身效率也可能会有所提升。</strong><ul>
+<li>查询 id 集的时候，使用 IN() 代替关联查询，可以让 MySQL 按照 id 顺序进行查询，这可能比随机的关联要更高效。</li>
+</ul>
+</li>
+<li><strong>可以减少冗余记录的查询。</strong><ul>
+<li>在应用层做关联查询，意味着对于某条记录应用只需要查询一次，而在数据库中做关联查询，则可能需要重复地访问一部分数据。从这点看，这样的重构还可能会减少网络和内存的消耗。</li>
+</ul>
+</li>
+<li><strong>这样做相当于在应用中实现了哈希关联，而不是使用 MySQL 的嵌套循环关联。某些场景哈希关联的效率要高很多。</strong></li>
+</ul>
+<h3 id="2-应用层关联的使用场景"><a href="#2-应用层关联的使用场景" class="headerlink" title="2. 应用层关联的使用场景"></a>2. 应用层关联的使用场景</h3><ul>
+<li>当应用能够方便的缓存单个查询结果时；</li>
+<li>当可以将数据分布到不同的 MySQL 服务器上时；</li>
+<li>当能够使用 IN() 的方式代替关联查询时；</li>
+<li>并发场景多，DB 查询频繁，需要分库分表时。</li>
+</ul>
+<h3 id="3-不推荐使用-JOIN-的原因"><a href="#3-不推荐使用-JOIN-的原因" class="headerlink" title="3. 不推荐使用 JOIN 的原因"></a>3. 不推荐使用 JOIN 的原因</h3><ul>
+<li><strong>DB 承担的业务压力过大，能减少负担就减少</strong>。<ul>
+<li>当表处于<code>百万级别</code>后，JOIN 导致性能下降。</li>
+</ul>
+</li>
+<li><strong>分布式的分库分表</strong>。<ul>
+<li>这种时候是不建议跨库 JOIN 的，目前 MySQL 的分布式中间件，跨库 JOIN 表现不良。</li>
+</ul>
+</li>
+<li><strong>修改表的 schema</strong><ul>
+<li>单表查询的修改比较容易，JOIN 写的 SQL 语句要修改，不容易发现，成本比较大，当系统比较大时，不好维护。</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-不使用-JOIN-的解决方法"><a href="#4-不使用-JOIN-的解决方法" class="headerlink" title="4. 不使用 JOIN 的解决方法"></a>4. 不使用 JOIN 的解决方法</h3><p>在<strong>业务层</strong>，单表查出数据后，作为条件给下一个单表查询，也就是<strong>子查询</strong>。会担心子查询出来的结果集太多，MySQL 对 IN 的数量没有限制，但是 MySQL 限制整条 SQL 语句的大小。通过调整参数 <code>max_allowed_packet</code>，可以修改一条 SQL 的最大值。建议在业务层上做好处理，限制一次查询出来的结果集是能接受的。</p>
+<h3 id="5-JOIN-查询的好处"><a href="#5-JOIN-查询的好处" class="headerlink" title="5. JOIN 查询的好处"></a>5. JOIN 查询的好处</h3><ul>
+<li>可以做分页；</li>
+<li>可以用副表的字段做查询条件，在查询的时候，将副表匹配到的字段作为结果集，用主表去 IN 它；<ul>
+<li>但是匹配到的数据量太大就不行了，也会导致返回的分页记录跟实际的不一样。解决的方法可以交给前端，一次性查询，让前端分批显示，这种解决方案的前提是数据量不大，因为 SQL 本身长度有限。</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<h3 id="子查询"><a href="#子查询" class="headerlink" title="子查询"></a>子查询</h3><p>由于 MySQL 基于成本的优化器 CBO 对子查询的处理能力较弱，不建议使用子查询，可以改写成 INNER JOIN。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	b.member_id,</span><br><span class="line">	b.member_type,</span><br><span class="line">	a.create_time,</span><br><span class="line">	a.device_model </span><br><span class="line">FROM</span><br><span class="line">	member_operation_log a</span><br><span class="line">	INNER JOIN ( SELECT member_id, member_type FROM member_base_info WHERE status &#x3D; 1 AND create_time BETWEEN &#39;2020-10-01 00:00:00&#39; AND &#39;2020-10-30 00:00:00&#39; ) AS b ON a.member_id &#x3D; b.member_id;</span><br></pre></td></tr></table></figure>
+
+<h2 id="WHERE-检查"><a href="#WHERE-检查" class="headerlink" title="WHERE 检查"></a>WHERE 检查</h2><h3 id="索引列被运算"><a href="#索引列被运算" class="headerlink" title="索引列被运算"></a>索引列被运算</h3><p>当一个字段被索引，同时出现在 WHERE 条件后面，是不能进行任何运算的，会导致索引失效。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># device_no 列上有索引，由于使用了 ltrim 函数导致索引失效</span><br><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	NAME,</span><br><span class="line">	phone,</span><br><span class="line">	address,</span><br><span class="line">	device_no </span><br><span class="line">FROM</span><br><span class="line">	users </span><br><span class="line">WHERE</span><br><span class="line">	ltrim( device_no ) &#x3D; &#39;Hfs1212121&#39;;</span><br><span class="line">	</span><br><span class="line"># balance 列有索引,由于做了运算导致索引失效</span><br><span class="line">SELECT</span><br><span class="line">	account_no,</span><br><span class="line">	balance </span><br><span class="line">FROM</span><br><span class="line">	accounts </span><br><span class="line">WHERE</span><br><span class="line">	balance + 100 &#x3D; 10000 </span><br><span class="line">	AND STATUS &#x3D; 1;</span><br></pre></td></tr></table></figure>
+
+<h3 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h3><p>对于 INT 类型的字段，传 VARCHAR 类型的值是可以走索引的，MySQL 内部自动做了隐式类型转换；相反对于 VARCHAR 类型的字段传入 INT 类型的值是无法走索引的，应该做到对应字段的类型传对应类型的值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"># user_id 是 bigint 类型，传入 varchar 值发生了隐式类型转换，可以走索引。</span><br><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	NAME,</span><br><span class="line">	phone,</span><br><span class="line">	address,</span><br><span class="line">	device_no </span><br><span class="line">FROM</span><br><span class="line">	users </span><br><span class="line">WHERE</span><br><span class="line">	user_id &#x3D; &#39;23126&#39;;</span><br><span class="line">	</span><br><span class="line"># card_no 是 varchar(20)，传入 int 值是无法走索引</span><br><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	NAME,</span><br><span class="line">	phone,</span><br><span class="line">	address,</span><br><span class="line">	device_no </span><br><span class="line">FROM</span><br><span class="line">	users </span><br><span class="line">WHERE</span><br><span class="line">	card_no &#x3D; 2312612121;</span><br></pre></td></tr></table></figure>
+
+<h3 id="列字符集"><a href="#列字符集" class="headerlink" title="列字符集"></a>列字符集</h3><p>从 MySQL 5.6 开始建议所有对象字符集应该使用 utf8mb4，包括 MySQL 实例字符集，数据库字符集，表字符集，列字符集。避免在关联查询 JOIN 时字段字符集不匹配导致索引失效，同时目前只有 utf8mb4 支持 emoji 表情存储。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 数据库实例字符集</span><br><span class="line">character_set_server &#x3D; utf8mb4</span><br><span class="line"># 连接字符集</span><br><span class="line">character_set_connection &#x3D; utf8mb4</span><br><span class="line"># 数据库字符集</span><br><span class="line">character_set_database &#x3D; utf8mb4</span><br><span class="line"># 结果集字符集</span><br><span class="line">character_set_results &#x3D; utf8mb4</span><br></pre></td></tr></table></figure>
+
+<h2 id="GROUP-BY-检查"><a href="#GROUP-BY-检查" class="headerlink" title="GROUP BY 检查"></a>GROUP BY 检查</h2><h3 id="前缀索引"><a href="#前缀索引" class="headerlink" title="前缀索引"></a>前缀索引</h3><p>GROUP BY 后面的列有索引，索引可以消除排序带来的 CPU 开销，如果是前缀索引，是不能消除排序的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#device_no字段类型varchar(200)，创建了前缀索引。</span><br><span class="line">mysql &gt; ALTER TABLE users ADD INDEX idx_device_no (</span><br><span class="line">device_no ( 64 ));</span><br><span class="line">mysql &gt; SELECT</span><br><span class="line">device_no,</span><br><span class="line">count(*) </span><br><span class="line">FROM</span><br><span class="line">	users </span><br><span class="line">WHERE</span><br><span class="line">	create_time BETWEEN &#39;2020-10-01 00:00:00&#39; </span><br><span class="line">	AND &#39;2020-10-30 00:00:00&#39; </span><br><span class="line">GROUP BY</span><br><span class="line">	device_no;</span><br></pre></td></tr></table></figure>
+
+<h3 id="函数运算"><a href="#函数运算" class="headerlink" title="函数运算"></a>函数运算</h3><p>假设需要统计某月每天的新增用户量，参考如下 SQL 语句，虽然可以走 create_time 的索引，但是不能消除排序，可以考虑冗余一个字段 stats_date <code>date</code> 类型来解决这种问题。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	DATE_FORMAT( create_time, &#39;%Y-%m-%d&#39; ),</span><br><span class="line">	count(*) </span><br><span class="line">FROM</span><br><span class="line">	users </span><br><span class="line">WHERE</span><br><span class="line">	create_time BETWEEN &#39;2020-09-01 00:00:00&#39; </span><br><span class="line">	AND &#39;2020-09-30 23:59:59&#39; </span><br><span class="line">GROUP BY</span><br><span class="line">	DATE_FORMAT( create_time, &#39;%Y-%m-%d&#39; );</span><br></pre></td></tr></table></figure>
+
+<h2 id="ORDER-BY-检查"><a href="#ORDER-BY-检查" class="headerlink" title="ORDER BY 检查"></a>ORDER BY 检查</h2><h3 id="前缀索引-1"><a href="#前缀索引-1" class="headerlink" title="前缀索引"></a>前缀索引</h3><p>ORDER BY 后面的列有索引，索引可以消除排序带来的 CPU 开销，如果是前缀索引，是不能消除排序的。</p>
+<h3 id="字段顺序"><a href="#字段顺序" class="headerlink" title="字段顺序"></a>字段顺序</h3><p>排序字段顺序，ASC/DESC 升降要跟索引保持一致，充分利用索引的有序性，来消除排序带来的 CPU 开销。</p>
+<h2 id="LIMIT-检查"><a href="#LIMIT-检查" class="headerlink" title="LIMIT 检查"></a>LIMIT 检查</h2><h3 id="LIMIT-m-n-要慎重"><a href="#LIMIT-m-n-要慎重" class="headerlink" title="LIMIT m, n 要慎重"></a>LIMIT m, n 要慎重</h3><p>对于 LIMIT m, n 分页查询，越往后面翻页即 m 越大的情况下 SQL 的耗时会越来越长，对于这种应该先取出主键 id，然后通过主键 id 跟原表进行 JOIN 关联查询。</p>
+<h1 id="表结构检查"><a href="#表结构检查" class="headerlink" title="表结构检查"></a>表结构检查</h1><h2 id="表-amp-列名关键字"><a href="#表-amp-列名关键字" class="headerlink" title="表&amp;列名关键字"></a>表&amp;列名关键字</h2><p>在数据库设计建模阶段，对表名及字段名设置要合理，不能使用 MySQL 的关键字，如 DESC, ORDER, STATUS, GROUP 等。同时建议设置 lower_case_table_names = 1 表名不区分大小写。</p>
+<h2 id="表存储引擎"><a href="#表存储引擎" class="headerlink" title="表存储引擎"></a>表存储引擎</h2><p>对于 OLTP 业务系统，建议使用 InnoDB 引擎获取更好的性能，可以通过参数 default_storage_engine 控制。</p>
+<h2 id="AUTO-INCREMENT-属性"><a href="#AUTO-INCREMENT-属性" class="headerlink" title="AUTO_INCREMENT 属性"></a>AUTO_INCREMENT 属性</h2><p>建表的时候主键 id 带有 AUTO_INCREMENT 属性，而且 AUTO_INCREMENT = 1，在 InnoDB 内部是通过一个系统全局变量 dict_sys.row_id 来计数，row_id 是一个 8 字节的 bigint unsigned，InnoDB 在设计时只给 row_id 保留了 6 个字节的长度，这样 row_id 取值范围就是 0~2^48 - 1，如果 id 的值达到了最大值，下一个值就从 0 开始继续循环递增，在代码中禁止指定主键 id 值插入。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 新插入的 id 值会从 10001 开始，这是不对的，应该从 1 开始。</span><br><span class="line">CREATE TABLE booking ( &#96;id&#96; BIGINT ( 20 ) NOT NULL AUTO_INCREMENT COMMENT &#39;主键id&#39;,......) ENGINE &#x3D; INNODB auto_increment &#x3D; 10000;</span><br><span class="line"># 指定了 id 值插入，后续自增就会从该值开始 +1，索引禁止指定 id 值插入。</span><br><span class="line">INSERT INTO booking ( id, book_sn )</span><br><span class="line">VALUES</span><br><span class="line">	( 1234551121, &#39;N12121&#39; );</span><br></pre></td></tr></table></figure>
+
+<h2 id="NOT-NULL-属性"><a href="#NOT-NULL-属性" class="headerlink" title="NOT NULL 属性"></a>NOT NULL 属性</h2><p>根据业务含义，尽量将字段都添加上 NOT NULL DEFAULT VALUE 属性，如果列值存储了大量的 NULL，会影响索引的稳定性。</p>
+<h2 id="DEFAULT-属性"><a href="#DEFAULT-属性" class="headerlink" title="DEFAULT 属性"></a>DEFAULT 属性</h2><p>在创建表的时候，建议每个字段尽量都有默认值，禁止 DEFAULT NULL，而是对字段类型填充响应的默认值。</p>
+<h2 id="COMMENT-属性"><a href="#COMMENT-属性" class="headerlink" title="COMMENT 属性"></a>COMMENT 属性</h2><p>字段的备注要能明确该字段的作用，尤其是某些表示状态的字段，要显式地写出该字段所有可能的状态数值以及该数值的含义。</p>
+<h2 id="TEXT-类型"><a href="#TEXT-类型" class="headerlink" title="TEXT 类型"></a>TEXT 类型</h2><p>不建议使用 TEXT 数据类型，一方面由于传输大量的数据包可能会超过 max_allowed_packet 设置导致程序报错，另一方面表上的 DML 操作都会变得很慢，建议采用 ES 或者对象存储 OSS 来存储和检索。</p>
+<h1 id="索引检查"><a href="#索引检查" class="headerlink" title="索引检查"></a>索引检查</h1><h2 id="索引属性"><a href="#索引属性" class="headerlink" title="索引属性"></a>索引属性</h2><p>索引基数指的是被索引的列唯一值的个数，唯一值越多接近表的 count(*) 说明索引的选择率越高，通过索引扫描的行数就越少，性能就越高，例如主键 id 的选择率是 100%，在 MySQL 中尽量所有的 UPDATE 都使用主键 id 去更新，因为 id 是聚集索引存储着整行数据，不需要回表，性能是最高的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">mysql &gt; SELECT</span><br><span class="line">count(*) </span><br><span class="line">FROM</span><br><span class="line">	member_info;</span><br><span class="line">+----------+ | count(*) | +----------+ | 148416 | +----------+ 1 ROW IN </span><br><span class="line">SET ( 0.35 sec ) mysql &gt; SHOW INDEX </span><br><span class="line">FROM</span><br><span class="line">	member_base_info;</span><br><span class="line">+------------------+------------+----------------------------+--------------+-------------------+-----------+-------------+----------+--------+------+------------+---------+---------------+ | TABLE | Non_unique | Key_name | Seq_in_index | Column_name | COLLATION | Cardinality | Sub_part | Packed | NULL | Index_type | COMMENT | Index_comment | +------------------+------------+----------------------------+--------------+-------------------+-----------+-------------+----------+--------+------+------------+---------+---------------+ | member_info | 0 | PRIMARY | 1 | id | A | 131088 | NULL | NULL | | BTREE | | | | member_info | 0 | uk_member_id | 1 | member_id | A | 131824 | NULL | NULL | | BTREE | | | | member_info | 1 | idx_create_time | 1 | create_time | A | 6770 | NULL | NULL | | BTREE | | | +------------------+------------+----------------------------+--------------+-------------------+-----------+-------------+----------+--------+------+------------+---------+---------------+ #Table： 表名</span><br><span class="line">#Non_unique ：是否为unique index，0-是，1-否。</span><br><span class="line">#Key_name：索引名称</span><br><span class="line">#Seq_in_index：索引中的顺序号，单列索引-都是1；复合索引-根据索引列的顺序从1开始递增。</span><br><span class="line">#Column_name：索引的列名</span><br><span class="line">#Collation：排序顺序，如果没有指定asc&#x2F;desc，默认都是升序ASC。</span><br><span class="line">#Cardinality：索引基数-索引列唯一值的个数。</span><br><span class="line">#sub_part：前缀索引的长度；例如index (member_name(10)，长度就是10。</span><br><span class="line">#Packed：索引的组织方式，默认是NULL。</span><br><span class="line">#Null：YES:索引列包含Null值；&#39;&#39;:索引不包含Null值。</span><br><span class="line">#Index_type：默认是BTREE，其他的值FULLTEXT，HASH，RTREE。</span><br><span class="line">#Comment：在索引列中没有被描述的信息，例如索引被禁用。</span><br><span class="line">#Index_comment：创建索引时的备注。</span><br></pre></td></tr></table></figure>
+
+<h2 id="前缀索引-2"><a href="#前缀索引-2" class="headerlink" title="前缀索引"></a>前缀索引</h2><p>对于变长的字符串类型 VARCHAR(m)，为了减少 key_len，可以考虑创建前缀索引，但是前缀索引不能消除 GROUP BY，ORDER BY 带来排序开销。如果字段的实际最大值比 m 小很多，建议缩小字段长度。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ALTER TABLE member_info ADD INDEX idx_member_name_part (</span><br><span class="line">member_name ( 10 ));</span><br></pre></td></tr></table></figure>
+
+<h2 id="复合索引顺序"><a href="#复合索引顺序" class="headerlink" title="复合索引顺序"></a>复合索引顺序</h2><p>有很多人喜欢在创建复合索引的时候，总以为前导列一定是唯一值多的列，例如索引 <code>index idx_create_time_status(create_time, status)</code>，这个索引往往是无法命中，因为扫描的 IO 次数太多，总体的 cost 比全表扫描还大，CBO 最终的选择是走 <code>full table scan</code>。</p>
+<p>MySQL 遵循的是<strong>索引最左匹配原则</strong>，对于复合索引，从左到右依次扫描索引列，到遇到第一个范围查询 <code>(&gt;=, &gt;, &lt;, &lt;=, BETWEEN ...... AND ......)</code> 就停止扫描，索引正确的索引顺序应该是 <code>index idx_status_create_time(status, create_time)</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	account_no,</span><br><span class="line">	balance </span><br><span class="line">FROM</span><br><span class="line">	accounts </span><br><span class="line">WHERE</span><br><span class="line">	status &#x3D; 1 </span><br><span class="line">	AND create_time BETWEEN &#39;2020-09-01 00:00:00&#39; </span><br><span class="line">	AND &#39;2020-09-30 23:59:59&#39;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="时间列索引"><a href="#时间列索引" class="headerlink" title="时间列索引"></a>时间列索引</h2><p>对于默认字段 <code>create_at(create_time)、update_at(update_time)</code> 这种默认就应该创建索引，一般来说是默认的规则。</p>
+<h1 id="SQL-优化案例"><a href="#SQL-优化案例" class="headerlink" title="SQL 优化案例"></a>SQL 优化案例</h1><p>通过对慢查询的监控告警，经常发现一些 SQL 语句 WHERE 过滤字段都有索引，但是由于 SQL 写法的问题导致索引失效，下面两个案例说明如何通过 SQL 改写来查询。可以通过以下 SQL 来捞取最近 5 分钟的慢查询进行告警。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	CONCAT(</span><br><span class="line">		&#39;# Time: &#39;,</span><br><span class="line">		DATE_FORMAT( start_time, &#39;%y%m%d %H%i%s&#39; ),</span><br><span class="line">		&#39;\n&#39;,</span><br><span class="line">		&#39;# User@Host: &#39;,</span><br><span class="line">		user_host,</span><br><span class="line">		&#39;\n&#39;,</span><br><span class="line">		&#39;# Query_time: &#39;,</span><br><span class="line">		TIME_TO_SEC( query_time ),</span><br><span class="line">		&#39;  Lock_time: &#39;,</span><br><span class="line">		TIME_TO_SEC( lock_time ),</span><br><span class="line">		&#39;  Rows_sent: &#39;,</span><br><span class="line">		rows_sent,</span><br><span class="line">		&#39;  Rows_examined: &#39;,</span><br><span class="line">		rows_examined,</span><br><span class="line">		&#39;\n&#39;,</span><br><span class="line">		sql_text,</span><br><span class="line">		&#39;;&#39; </span><br><span class="line">) </span><br><span class="line">FROM</span><br><span class="line">	mysql.slow_log </span><br><span class="line">WHERE</span><br><span class="line">	start_time BETWEEN CURRENT_TIMESTAMP </span><br><span class="line">	AND date_add( CURRENT_TIMESTAMP, INTERVAL - 5 MINUTE );</span><br></pre></td></tr></table></figure>
+
+<h2 id="慢查询-SQL"><a href="#慢查询-SQL" class="headerlink" title="慢查询 SQL"></a>慢查询 SQL</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">| 2020-10-02 19 : 17 : 23 | w_mini_user [ w_mini_user ] @[ 10.200.20.11 ] | 00 : 00 : 02 | 00 : 00 : 00 | 9 | 443117 | mini_user | 0 | 0 | 168387936 | SELECT</span><br><span class="line">id,</span><br><span class="line">club_id,</span><br><span class="line">reason,</span><br><span class="line">status,</span><br><span class="line">type,</span><br><span class="line">created_time,</span><br><span class="line">invite_id,</span><br><span class="line">falg_admin,</span><br><span class="line">file_id </span><br><span class="line">FROM</span><br><span class="line">	t_user_msg </span><br><span class="line">WHERE</span><br><span class="line">	1 </span><br><span class="line">	AND ( team_id IN ( 3212 ) AND app_id IS NOT NULL ) </span><br><span class="line">	OR ( invite_id &#x3D; 12395 OR applicant_id &#x3D; 12395 ) </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;</span><br><span class="line">| 1219921665 |</span><br></pre></td></tr></table></figure>
+
+<p>从慢查询 slow_log 可以看到，执行时间 2s，扫描了 443117 行，只返回了 9 行，这是不合理的。</p>
+<h2 id="SQL-分析"><a href="#SQL-分析" class="headerlink" title="SQL 分析"></a>SQL 分析</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">#原始SQL，频繁访问的接口，目前执行时间2s。</span><br><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	team_id,</span><br><span class="line">	reason,</span><br><span class="line">	status,</span><br><span class="line">	type,</span><br><span class="line">	created_time,</span><br><span class="line">	invite_id,</span><br><span class="line">	falg_admin,</span><br><span class="line">	file_id </span><br><span class="line">FROM</span><br><span class="line">	t_user_msg </span><br><span class="line">WHERE</span><br><span class="line">	1 </span><br><span class="line">	AND ( team_id IN ( 3212 ) AND app_id IS NOT NULL ) </span><br><span class="line">	OR ( invite_id &#x3D; 12395 OR app_id &#x3D; 12395 ) </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;#执行计划</span><br><span class="line">+----+-------------+--------------+-------+---------------------------------+------------+---------+------+------+-------------+ | id | select_type | TABLE | type | possible_keys | KEY | key_len | ref | rows | Extra | +----+-------------+--------------+-------+---------------------------------+------------+---------+------+------+-------------+ | 1 | SIMPLE | t_user_msg | INDEX | invite_id,</span><br><span class="line">app_id,</span><br><span class="line">team_id | created_time | 5 | NULL | 10 | USING </span><br><span class="line">WHERE</span><br><span class="line">	| +----+-------------+--------------+-------+---------------------------------+------------+---------+------+------+-------------+ 1 ROW IN </span><br><span class="line">	SET ( 0.00 sec )</span><br></pre></td></tr></table></figure>
+
+<p>从执行计划可以看到，表上有单列索引 <code>invite_id, app_id, team_id, created_time</code>，走的是 <code>create_time</code> 的索引，而且 <code>type = index</code> 索引全扫描，因为 <code>create_time</code> 没有出现在 WHERE 条件后，只出现在 ORDER BY 前，只能是 <code>type = index</code>，这也预示着表数据量越大该 SQL 越慢，我们期望是走三个单列索引 <code>invite_id, app_id, team_id</code>，然后<code>type = index_merge</code> 操作。</p>
+<p>按照常规思路，对于 OR 条件拆分两部分，分别进行分析。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT id, …….FROM t_user_msg WHERE 1 AND **( team_id IN ( 3212 ) AND app_id IS NOT NULL )** </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;</span><br></pre></td></tr></table></figure>
+
+<p>从执行计划看走的是 team_id 的索引，没有问题。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">| id | select_type | TABLE | type | possible_keys | KEY | key_len | ref | rows | Extra | +----+-------------+--------------+------+----------------------+---------+---------+-------+------+-----------------------------+ | 1 | SIMPLE | t_user_msg | ref | app_id,</span><br><span class="line">team_id | team_id | 8 | const | 30 | USING </span><br><span class="line">WHERE</span><br><span class="line">	;</span><br><span class="line">USING filesort |</span><br></pre></td></tr></table></figure>
+
+<p>再看另外一个 SQL 语句：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT id, …….FROM t_user_msg WHERE 1 AND **( invite_id &#x3D; 12395 OR app_id &#x3D; 12395 )** </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;</span><br></pre></td></tr></table></figure>
+
+<p>从执行计划上看，分别走的是 <code>invite_id, app_id</code> 的单列索引，同时做了 index_merge 合并操作，也没有问题。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">| id | select_type | TABLE | type | possible_keys | KEY | key_len | ref | rows | Extra | +----+-------------+--------------+-------------+-------------------------+-------------------------+---------+------+------+-------------------------------------------------------------------+ | 1 | SIMPLE | t_user_msg | index_merge | invite_id,</span><br><span class="line">app_id | invite_id,</span><br><span class="line">app_id | 9,</span><br><span class="line">9 | NULL | 2 | USING UNION</span><br><span class="line">( invite_id, app_id );</span><br><span class="line">USING </span><br><span class="line">WHERE</span><br><span class="line">	;</span><br><span class="line">USING filesort |</span><br></pre></td></tr></table></figure>
+
+<p><strong><em>通过上面的分析，第一部分 SQL 走的执行计划走 team_id 没问题，第二部分 SQL 分别走 invite_id, app_id 索引并且 index_merge 也没问题，为什么两部分 SQL 进行 OR 关联之后走 create_time 的单列索引呢，不应该是三个单列索引的 index_merge 吗？</em></strong></p>
+<p>index_merge 默认是在优化器选项是开启的，主要是将多个范围扫描的结果集合并成一个，可以通过变量查看。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mysql &gt; SELECT</span><br><span class="line">@@optimizer_switch;</span><br><span class="line">| index_merge &#x3D; ON,</span><br><span class="line">index_merge_union &#x3D; ON,</span><br><span class="line">index_merge_sort_union &#x3D; ON,</span><br><span class="line">index_merge_intersection &#x3D; ON,</span><br></pre></td></tr></table></figure>
+
+<p>其他三个字段都传入的是具体的值，而且都走了相应的索引，只能怀疑 <code>app_id is not null</code> 这个条件影响了 CBO 对最终执行计划的选择，去掉这个条件来看执行计划，竟然走了三个单列索引并且 <code>type = index_merge</code>，那下面只需要搞定 <code>app_id is not null</code> 这个条件。</p>
+<h2 id="SQL-改写"><a href="#SQL-改写" class="headerlink" title="SQL 改写"></a>SQL 改写</h2><p>通过上面的分析得知，条件 <code>app_id is not null</code> 影响了 CBO 的选择，下面进行改造。</p>
+<h3 id="改写优化-1"><a href="#改写优化-1" class="headerlink" title="改写优化 1"></a>改写优化 1</h3><p>根据 SQL 开发规范改写，将 OR 改写成 UNION ALL 方式即可，最终的 SQL 如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	…….</span><br><span class="line">FROM</span><br><span class="line">	(</span><br><span class="line">	SELECT</span><br><span class="line">		id,</span><br><span class="line">		…….</span><br><span class="line">	FROM</span><br><span class="line">		t_user_msg </span><br><span class="line">	WHERE</span><br><span class="line">		** 1 </span><br><span class="line">		AND ( club_id IN ( 5821 ) AND applicant_id IS NOT NULL )** ** UNION ALL</span><br><span class="line">		** SELECT</span><br><span class="line">		id,</span><br><span class="line">		…….</span><br><span class="line">	FROM</span><br><span class="line">		t_user_msg </span><br><span class="line">	WHERE</span><br><span class="line">		** 1 </span><br><span class="line">		AND invitee_id &#x3D; &#39;146737&#39; ** ** UNION ALL</span><br><span class="line">		** SELECT</span><br><span class="line">		id,</span><br><span class="line">		…….</span><br><span class="line">	FROM</span><br><span class="line">		t_user_msg </span><br><span class="line">	WHERE</span><br><span class="line">		** 1 </span><br><span class="line">		AND app_id &#x3D; &#39;146737&#39; ** </span><br><span class="line">	) AS a </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;</span><br></pre></td></tr></table></figure>
+
+<p>一般情况下，Java 代码和 SQL 是分开的，SQL 是配置在 xml 文件中，根据业务需求，除了 team_id 是必填，其他两个都是可选的，所以这种改写虽然能提高 SQL 执行效率，但不适合这种业务场景。</p>
+<h3 id="改写优化-2"><a href="#改写优化-2" class="headerlink" title="改写优化 2"></a>改写优化 2</h3><p><code>app_id is not null</code> 改写为 <code>IFNULL(app_id, 0) &gt; 0</code>，最终的 SQL 为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	team_id,</span><br><span class="line">	reason,</span><br><span class="line">	status,</span><br><span class="line">	type,</span><br><span class="line">	created_time,</span><br><span class="line">	invite_id,</span><br><span class="line">	falg_admin,</span><br><span class="line">	file_id </span><br><span class="line">FROM</span><br><span class="line">	t_user_msg </span><br><span class="line">WHERE</span><br><span class="line">	1 </span><br><span class="line">	AND ( team_id IN ( 3212 ) AND ** IFNULL( app_id, 0 ) &gt; 0 )**) </span><br><span class="line">	OR ( invite_id &#x3D; 12395 OR app_id &#x3D; 12395 ) </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;</span><br></pre></td></tr></table></figure>
+
+<h3 id="改写优化-3"><a href="#改写优化-3" class="headerlink" title="改写优化 3"></a>改写优化 3</h3><p>将字段 <code>app_id bigint(20) DEFAULT NULL</code>，变更为 <code>app_id bigint(20) NOT NULL DEFAULT 0</code>，同时更新将 <code>app_id is not null</code> 的时候全部更新成 0，就可以将条件 <code>app_id is not null</code> 转换为 <code>app_id &gt; 0</code>，最终的 SQL 为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">SELECT</span><br><span class="line">	id,</span><br><span class="line">	team_id,</span><br><span class="line">	reason,</span><br><span class="line">	status,</span><br><span class="line">	type,</span><br><span class="line">	created_at,</span><br><span class="line">	invite_id,</span><br><span class="line">	falg_admin,</span><br><span class="line">	file_id </span><br><span class="line">FROM</span><br><span class="line">	t_user_msg </span><br><span class="line">WHERE</span><br><span class="line">	1 </span><br><span class="line">	AND ( team_id IN ( 3212 ) AND ** app_id &gt; 0 )**) </span><br><span class="line">	OR ( invite_id &#x3D; 12395 OR app_id &#x3D; 12395 ) </span><br><span class="line">ORDER BY</span><br><span class="line">	created_time DESC </span><br><span class="line">	LIMIT 0,</span><br><span class="line">	10;</span><br></pre></td></tr></table></figure>
+
+<p>从执行计划看，两种改写优化方式都走三个单列索引，执行时间从 2s 降低至 10ms，线上采用的是<strong>优化1</strong>的方式，如果一开始能遵循 MySQL 开发规范就会避免问题的产生。</p>
+<blockquote>
+<p>参考链接：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_35190492/article/details/109712166">大厂都是怎么进行SQL调优的？</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/ssdjdk/article/details/88912953">MySql中On和Where的区别</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/muxiaoshan/article/details/7617533?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.channel_param">left join on 和where条件的放置</a></li>
+</ul>
+</blockquote>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.julyzzz.icu/2020/11/16/SQL%E8%B0%83%E4%BC%98/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SQL/" rel="tag">SQL</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2020/11/19/JS%E6%A0%BC%E5%BC%8F%E5%8C%96%E6%97%A5%E6%9C%9F%E6%97%B6%E9%97%B4/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            JS格式化日期时间
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/11/13/Github%E4%B8%8B%E8%BD%BD%E6%BA%90/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Github下载源</div>
+      </a>
+    
+  </nav>
+
+  
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2020-2021
+        <i class="ri-heart-fill heart_icon"></i> ian
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        由 <a href="https://hexo.io" target="_blank">Hexo</a> 强力驱动
+        <span class="division">|</span>
+        主题 - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+<!-- ClickLove -->
+
+
+<script src="/js/clickLove.js"></script>
+
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+
+
+<link rel="stylesheet" href="/css/clipboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+<!-- CanvasBackground -->
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=22707008&auto=1&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>

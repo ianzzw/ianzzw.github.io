@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+
+
+<head>
+  <meta charset="utf-8" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="baidu-site-verification" content="code-jjCJrHUiwT" />
+  <title>
+    SpringBoot+ElasticSearch |  沙
+  </title>
+  <meta name="generator" content="hexo-theme-ayer">
+  
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  
+
+  
+
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-SpringBoot-ElasticSearch"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  SpringBoot+ElasticSearch
+</h1>
+ 
+
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2020/11/08/SpringBoot-ElasticSearch/" class="article-date">
+  <time datetime="2020-11-07T17:48:10.000Z" itemprop="datePublished">2020-11-08</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Java/">Java</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.6k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">10 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <blockquote>
+<p><strong><em>Framework</em></strong></p>
+<p><code>SpringBoot 2.3.4.RELEASE</code></p>
+<p><code>Maven 3.6.3</code></p>
+<p><code>ElasticSearch7.9.0</code></p>
+</blockquote>
+<h3 id="Maven依赖"><a href="#Maven依赖" class="headerlink" title="Maven依赖"></a>Maven依赖</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-data-elasticsearch<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.projectlombok<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>lombok<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">optional</span>&gt;</span>true<span class="tag">&lt;/<span class="name">optional</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="使用-RestHighLevelClient-连接-ES"><a href="#使用-RestHighLevelClient-连接-ES" class="headerlink" title="使用 RestHighLevelClient 连接 ES"></a>使用 RestHighLevelClient 连接 ES</h2><h3 id="config"><a href="#config" class="headerlink" title="config"></a>config</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EsConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function">RestHighLevelClient <span class="title">restHighLevelClient</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ClientConfiguration configuration = ClientConfiguration.builder()</span><br><span class="line">                .connectedTo(hostAndPort)</span><br><span class="line">                .build();</span><br><span class="line">        <span class="keyword">return</span> RestClients.create(configuration).rest();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><h3 id="pojo"><a href="#pojo" class="headerlink" title="pojo"></a>pojo</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@NoArgsConstructor</span></span><br><span class="line"><span class="meta">@AllArgsConstructor</span></span><br><span class="line"><span class="meta">@Document(indexName = &quot;user-doc&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="keyword">private</span> Integer id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Integer age;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String sex;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String desc;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="dao"><a href="#dao" class="headerlink" title="dao"></a>dao</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserDao</span> <span class="keyword">extends</span> <span class="title">CrudRepository</span>&lt;<span class="title">User</span>, <span class="title">Integer</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 通过姓名查找</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> name 姓名</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> user</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">List&lt;User&gt; <span class="title">findByName</span><span class="params">(String name)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 通过姓名或desc查找</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> name name</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> desc desc</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> user</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">List&lt;User&gt; <span class="title">findByNameOrDesc</span><span class="params">(String name,String desc)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="service"><a href="#service" class="headerlink" title="service"></a>service</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserService</span> </span>&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 查询全部</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> user</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function">Iterable&lt;User&gt; <span class="title">findAll</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 添加user列表</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> list user列表</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">save</span><span class="params">(List&lt;User&gt; list)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 添加suer</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> user user</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">save</span><span class="params">(User user)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 通过姓名查找</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> name name</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> user</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function">List&lt;User&gt; <span class="title">findByName</span><span class="params">(String name)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * 通过姓名或desc查找</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> name name</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> desc desc</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@return</span> user列表</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function">List&lt;User&gt; <span class="title">findByNameOrDesc</span><span class="params">(String name, String desc)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="serviceImpl"><a href="#serviceImpl" class="headerlink" title="serviceImpl"></a>serviceImpl</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserServiceImpl</span> <span class="keyword">implements</span> <span class="title">UserService</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> UserDao userDao;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Iterable&lt;User&gt; <span class="title">findAll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> userDao.findAll();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">save</span><span class="params">(List&lt;User&gt; list)</span> </span>&#123;</span><br><span class="line">		list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">		String str = <span class="string">&quot;帆乘   楷栋   锋枫   海勇   康帆   安礼   晓平   良帆   瑞翱   涛锟   恒勇   鸿驰   帆强   桓柏   锋寅   博槐   骞琛   桓钊   杰桓 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  裕枫   福晖   槐仕   奇鹏   骏伟   允潍 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  乘初   杞郁   柏安   皓宇   骏侠   礼德   哲晓   伟权   祥恒   澄震   浩浩   瑞权   延升   翱楷   锋轩   驰鹏   杞翱   康鹤   材福   晖锐&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  信恒   凯锦   诚翱   震福   龙宇   祥帆 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  梓瑞   林龙   日延   槐翰   日寅   起鸿   杞允   瑞锐   仕星   权铭   吉楷   寅星   林帝   皓仕   卓礼   家盛   海寅   盛胤   年禧   畅安&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  炳龙   柏晖   诚年   彬坤   礼诚   濡凯 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  驰晨   恒邦   帆晖   诚华   晖星   恒梓   禄彬   鹤华   锟升   桓浩   振尧   祥寅   楷辰   暄帝   锐梓   恒佑   文安   杰畅   加琛   俊泽&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  乘驰   禄家   中鹤   家锦   皓初   凯震 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  文韦   彬澄   起哲   海炳   鹤锋   贤逸   哲佑   海信   逸俊   炳年   礼郁   濡寅   晓泽   然延   喆加   天梓   泽锟   轩谛   盛翱   晨子&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  诚吉   梁鹤   仕逸   升平   奇琛   杞沛 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  胤邦   辰佑   骞佳   鸿鹏   翱坤   钊峰   哲锐   腾鑫   海阳   烁奇   安芃   浩瑞   星尧   驰炳   安沛   权成   华文   杞晨   柏柔   权彬&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  祯晨   谛潍   驰安   安日   谷沛   帆华 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  林翰   然震   琛星   泽杞   澄涛   龙欣   嘉辰   海禄   诚家   帆韦   澄濡   潍延   郁邦   锐礼   蔓材   畅震   腾诚   峰贤   轩潍   凡信&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  翱年   祜帆   睿吉   祯博   强延   震鑫 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  邦郁   禧祯   良梁   烁谛   成震   翱颜   加升   荣俊   晨骞   锦槐   烁安   鑫平   沛凯   德升   炳宇   远侠   晖鹏   腾谷   初帆   林然&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  中禄   斌颜   颜浩   远帆   胤然   祜沛 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  允锟   畅梁   栋材   泽柔   远锐   杞梁   凯濡   郁槐   家泽   暄乘   年权   文柏   潍禧   澄禧   奇锦   逸然   翰弘   华海   柏辞   瑞星&quot;</span> +</span><br><span class="line">				<span class="string">&quot; &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  胤佑   芃嘉   祜胤   逸杰   杰逸   材龙 &quot;</span> +</span><br><span class="line">				<span class="string">&quot;  允升   加韦   逸福   桓辞   枫濡   信然   栋祯\&quot; +\n&quot;</span> +</span><br><span class="line">				<span class="string">&quot;                \&quot;蓓菡   娜嘉   碧珊   菲昕   芸帆   怡莉   鸿莲   曦静   灵玥   橘婧   家曼   鹤丽   岚琳   格梅   呈梦   璇嘉   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;月欣&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   楠敏   瑶丽   茹莲   杉歆   帆珍   琬彬&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   蓓昭   函璇   凌欢   歆蔚   妮萱   琛灵   婷媛   琳凌   岚冬   静鸿   珍倩   桂枫   玉岚   紫涵   桃婧   芳璟   韵珠   香萱   冰梅   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;桂寒&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   呈曼   梅茹   雯帆   芙明   紫桂   霞玲&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   蓓莉   霞可   琪香   菲春   美俊   梦栀   鹤婧   帛菲   静芝   琳沛   玥薇   璟漫   弦茹   彦茜   花梓   歆曦   寒洁   莉梓   颖芙   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;梓露&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   玉诗   桃橘   鹤霞   沛漫   月婧   玲阳&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   雅欢   珍月   璟紫   歆淑   韵琬   月玉   欢彦   寒娅   妍彤   梦萱   蕾芳   心彤   彩妮   寒玲   淑漫   茜桐   春楠   洲茜   月嘉   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;欣云&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   珠香   岚韵   娜呈   妮弦   芸函   芳寒&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   萱林   云琳   莲菡   碧娅   莉凌   栀茜   蔚妮   惠婧   香心   初莉   颖淑   凡芝   璇灵   可蕾   静文   彩鹤   芙鑫   花楠   云梦   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;菲茹&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   蓓玥   惠娅   凌芳   柔旭   琛楠   雪娜&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   蕾诗   芸珠   菡桂   蕾文   桃花   彩诗   彬洁   帆馨   雯春   芝韵   春雅   静紫   寒橘   冰淑   韵露   昭莲   诗晨   钰花   彩月   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;昕欢&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   香可   菲婧   橘静   钰韵   霞心   彬雅&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   芙春   菲惠   萱曦   惠枫   舒薇   楠丽   栀珍   琳惠   歆冬   漫月   莲琛   琬梓   雨美   梦家   倩慧   俊薇   彬璇   敏玉   栀曼   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;曦倩&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   蓓蔚   月茜   俊珍   茹帆   璐欢   芝珊&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   昕舒   娅璐   慧玉   春玥   舒静   颖楠   淑紫   漫彩   欢曼   芳歆   桂冰   芙薇   旭雅   璇冰   岚欣   岚玲   慧锦   克霞   萱丽   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;采碧&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   洁昭   采彩   珊云   漫梦   萱凌   怡文&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   霞杉   敏怡   莉怡   怡露   格漫   瑶薇   沛菲   彦梦   妮馨   菲萱   敏桐   鹤菡   彬蓓   凌彤   珊莉   漫依   琪莲   欣霞   璟心   &quot;</span> +</span><br><span class="line">				<span class="string">&quot;梅薇&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   寒蓓   倩梓   采娜   琬雯   枫梅   花格&quot;</span> +</span><br><span class="line">				<span class="string">&quot;   馨可   杉璐   舒娅   沛香   颖茹   格玲   花柏   雨璟   欣薇&quot;</span>;</span><br><span class="line"></span><br><span class="line">		String[] names = str.split(<span class="string">&quot;\\s+&quot;</span>);</span><br><span class="line"></span><br><span class="line">		String[] descArr = &#123;</span><br><span class="line">				<span class="string">&quot;大家好，我是雨天，因为刚好出生在雨天，老爸又刚好姓夏，于是“下雨天”就首发出场了，而且妈妈也希望我如雨后春笋、天天向上哦！呵呵后来因为一部分人实在不忍心在晴朗的天气里叫我雨天，为避免引起“混乱”，就只好舍弃了这个颇有个性的简单名字，退而成“小名“了。我的大名也简单，其实就一个“翌”字，因为我出生的日子刚好是爸爸妈妈结婚2周年纪念日的第二日。“夏翌”谐音宁波话“暇意”，大家希望我暇暇意意，呵呵，有点嫌”翌”字太文绉绉，就把它给拆了，一分为二成羽立了。&quot;</span></span><br><span class="line">				,</span><br><span class="line">				<span class="string">&quot;大家都说我是个阳光女孩，因为我是开心果啊。我老是坐不住，呵呵，能跟小椅子成为好朋友，是老师和爸爸妈妈现在的最大心愿。我喜欢跳舞，但最好能跟着音乐自己起舞，不用按老师的要求练基本功；我喜欢画画，但最好是信手涂鸦，把小朋友的脸画成绿色也没关系；我喜欢溜冰，但最有趣的还是约上三五好友，一起练习如何摔跤……&quot;</span></span><br><span class="line">				, <span class="string">&quot;昀昀是我在妈妈肚子里时的小名哦，我的大名叫曹铁瀛，妈妈怀我的时候和单位里的阿姨们玩牌经常是百战百胜，阿姨们说是因为我的缘故，干脆就叫“天赢”好了，爸妈取其谐音，就变成了“铁瀛”&quot;</span></span><br><span class="line">				, <span class="string">&quot;嘿！我——21号来报到了！智诰、诰诰、阿诰，你们爱怎么叫就怎么叫吧！反正都是我！我的名字是奶奶请一名先生取的，虽然有点迷信，但寄托了全家人的祝福！&quot;</span></span><br><span class="line">				,</span><br><span class="line">				<span class="string">&quot;还是汽车发烧友，小轿车、大卡车、集装箱、大客车、翻斗车、压路机……应有尽有（就差拖拉机还没有报到）。我常在家练习倒车、移库、爬坡、过单轨桥，考取驾照不成问题！！当然我也模拟制造几起车祸，掉进大河，深沟，追尾事故，因为那时我又能大显身手，汽车的零件装了又拆，拆了又装……哈哈！！角角落落都是我的杰作，缺胳膊少腿的，七零八落的，尽管汽车多，可完完整整的没几辆！这下，又有理由去买车啦！&quot;</span></span><br><span class="line">				,</span><br><span class="line">				<span class="string">&quot;我还喜欢画画。从小我就拿着笔画一个个的大圆圈，每天乐此不疲，整整画了半年多圆圈呢！够有毅力的吧！老师说我构图线条流畅，就是那样练出来的哦！以后我一定会继续努力的！可是我不太喜欢看书，妈妈让我看书，我老是心不在焉，左顾右盼，常常惹她不高兴，可我就是不喜欢嘛！&quot;</span></span><br><span class="line">				, <span class="string">&quot;我的性格有点内向、腼腆、不喜欢“显山露水”。我最喜欢体育项目了，最“痴迷”的就是体育频道：乒乓球、羽毛球、台球、足球、篮球、跳水~~，当然我也喜欢打牌（这可是遗传）。&quot;</span></span><br><span class="line">				, <span class="string">&quot;我的个子很高，被称为“帅哥”，因此彼得女孩子的欢心哦，等我长大了，我要娶七个“老婆”，其中三个为：外婆、爸爸和妈妈。 我的目标是考上北大。\n&quot;</span></span><br><span class="line">				, <span class="string">&quot;我当时的第一反应是：这两个字可以跟名人的名字做一个联系，然后做一个介绍。我说你介绍的时候可以跟别人讲：&quot;</span></span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//模拟数据</span></span><br><span class="line">		Random random = <span class="keyword">new</span> Random();</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">			<span class="keyword">int</span> j = random.nextInt(names.length);</span><br><span class="line">			<span class="keyword">int</span> k = random.nextInt(descArr.length);</span><br><span class="line">			<span class="comment">// 第一个参数是id，所以无论运行多少次，都只会添加100条数据</span></span><br><span class="line">			<span class="comment">// 如果id存在，es更新；不存在，es添加</span></span><br><span class="line">			User user = <span class="keyword">new</span> User(i, names[j], i, String.valueOf(i % <span class="number">2</span>), descArr[k]);</span><br><span class="line">			list.add(user);</span><br><span class="line">		&#125;</span><br><span class="line">		userDao.saveAll(list);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">save</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">		userDao.save(user);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> List&lt;User&gt; <span class="title">findByName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> userDao.findByName(name);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> List&lt;User&gt; <span class="title">findByNameOrDesc</span><span class="params">(String name, String desc)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> userDao.findByNameOrDesc(name, desc);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="controller"><a href="#controller" class="headerlink" title="controller"></a>controller</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserController</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> UserService userService;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@RequestMapping(&quot;/findAll&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Iterable&lt;User&gt; <span class="title">findAll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> userService.findAll();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@RequestMapping(&quot;/saveList&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">save</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		List&lt;User&gt; list = <span class="keyword">null</span>;</span><br><span class="line">		userService.save(list);</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;success&quot;</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@RequestMapping(&quot;/save&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">save</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">		userService.save(user);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@RequestMapping(&quot;/findByName&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> List&lt;User&gt; <span class="title">findByName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> userService.findByName(name);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@RequestMapping(&quot;/findByNameOrDesc&quot;)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> List&lt;User&gt; <span class="title">findByNameOrDesc</span><span class="params">(String name, String desc)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> userService.findByNameOrDesc(name, desc);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><code>SpringBoot</code> 启动后会自动创建 <code>user-doc</code> 索引</li>
+<li><code>Chrome</code> 或 <code>PostMan</code> 请求 <code>localhost:8080/saveList</code> 添加数据</li>
+<li><code>localhost:8080/findAll</code> 查看数据</li>
+</ul>
+<h3 id="Kibana查看数据"><a href="#Kibana查看数据" class="headerlink" title="Kibana查看数据"></a>Kibana查看数据</h3><img src="https://mycos-1301623763.cos.ap-chengdu.myqcloud.com/blog/2020-11-05/2020-11-05-es-1.png" width=75%>
+
+
+
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.julyzzz.icu/2020/11/08/SpringBoot-ElasticSearch/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ElasticSearch/" rel="tag">ElasticSearch</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2020/11/09/ES6-%E6%95%B0%E7%BB%84/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            ES6 数组
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2020/11/08/Hexo-Blog/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Hexo Blog</div>
+      </a>
+    
+  </nav>
+
+  
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2020-2021
+        <i class="ri-heart-fill heart_icon"></i> ian
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        由 <a href="https://hexo.io" target="_blank">Hexo</a> 强力驱动
+        <span class="division">|</span>
+        主题 - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+<!-- ClickLove -->
+
+
+<script src="/js/clickLove.js"></script>
+
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+
+
+<link rel="stylesheet" href="/css/clipboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+<!-- CanvasBackground -->
+
+
+    
+    <div id="music">
+    
+    
+    
+    <iframe frameborder="no" border="1" marginwidth="0" marginheight="0" width="200" height="52"
+        src="//music.163.com/outchain/player?type=2&id=22707008&auto=1&height=32"></iframe>
+</div>
+
+<style>
+    #music {
+        position: fixed;
+        right: 15px;
+        bottom: 0;
+        z-index: 998;
+    }
+</style>
+    
+  </div>
+</body>
+
+</html>
